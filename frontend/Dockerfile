@@ -8,13 +8,13 @@ RUN corepack enable && corepack prepare yarn@stable --activate
 
 # Install dependencies
 COPY package.json yarn.lock ./
-RUN yarn install --frozen-lockfile
+RUN yarn install --immutable
 
 # Copy app source code
 COPY . .
 
 # Build the React app
-RUN yarn build
+#RUN yarn build
 
 # Expose the frontend port
 EXPOSE 3000
