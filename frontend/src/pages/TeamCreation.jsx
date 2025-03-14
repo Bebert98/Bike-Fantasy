@@ -3,6 +3,8 @@ import Button from '../components/Button';
 import Input from '../components/Input';
 import Table from '../components/Table';
 
+const MAX_POINTS = 11000;
+
 const TeamCreation = () => {
     const [team, setTeam] = useState(Array(12).fill({ name: '', points: 0 }));
     const [totalPoints, setTotalPoints] = useState(0);

@@ -10,6 +10,8 @@ services:
       - ./backend:/app
     depends_on:
       - mongodb
+    command: >
+      sh -c "python db/init_db.py && python db/seed_data.py && uvicorn main:app --host 0.0.0.0 --port 8000"
 
   frontend:
     build: ./frontend
@@ -31,6 +33,11 @@ services:
       - "27017:27017"
     volumes:
       - mongodb_data:/data/db
+    healthcheck:                              # Health check for MongoDB readiness
+      test: ["CMD", "mongo", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
 
 volumes:
   mongodb_data:

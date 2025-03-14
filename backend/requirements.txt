@@ -1,0 +1,7 @@
+pymongo
+python-dotenv
+pandas
+numpy
+seaborn
+uvicorn
+fastapi
