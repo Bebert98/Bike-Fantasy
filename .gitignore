@@ -1,0 +1,6 @@
+.env
+.venv/
+build
+public
+.yarn
+node_modules
