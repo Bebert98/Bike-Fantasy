@@ -5,17 +5,16 @@ db = get_db()
 db.create_collection("riders", validator={
     "$jsonSchema": {
         "bsonType": "object",
-        "required": ["first_name", "last_name", "age", "uci_points", "url"],
+        "required": ["rider_name", "rank", "points", "rider_url", "team_url"],
         "properties": {
-            "first_name": {"bsonType": "string", "description": "Must be a string"},
-            "last_name": {"bsonType": "string", "description": "Must be a string"},
-            "age": {
-                "bsonType": "int",
-                "minimum": 18,
-                "description": "Must be an integer greater than or equal to 18"
+            "rider_name": {"bsonType": "string", "description": "Must be a string"},
+            "rank": {"bsonType": "double", "description": "Must be a float"},
+            "points": {"bsonType": "double", "description": "Must be a float (double) value"},
+            "rider_url": {
+                "bsonType": "string",
+                "description": "Must be a valid URL starting with 'http://' or 'https://'"
             },
-            "uci_points": {"bsonType": "double", "description": "Must be a float (double) value"},
-            "url": {
+            "team_url": {
                 "bsonType": "string",
                 "description": "Must be a valid URL starting with 'http://' or 'https://'"
             }
