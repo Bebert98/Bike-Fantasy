@@ -1,0 +1,6 @@
+Races = ["omloop-het-nieuwsblad","faun-ardeche-classic", "la-drome-classic","kuurne-brussel-kuurne",
+         "trofeo-laigueglia","strade-bianche","nokere-koerse","milano-torino","gp-de-denain",
+         "bredene-koksijde-classic","milano-sanremo","classic-brugge-de-panne",
+         "e3-harelbeke","gent-wevelgem","dwars-door-vlaanderen","gran-premio-miguel-indurain",
+         "ronde-van-vlaanderen","scheldeprijs","brabantse-pijl","paris-roubaix","amstel-gold-race",
+         "la-fleche-wallone","liege-bastogne-liege"]

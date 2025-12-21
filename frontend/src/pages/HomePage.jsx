@@ -1,7 +1,8 @@
 import React from 'react';
 import '../styles/HomePage.css';
-import { Link } from 'react-router-dom';
 import philippeGilbertImage from '../assets/philippe_gilbert.png';
+import { debugLog } from '../services/debug';
+import { getHistory, getLatestRace } from '../services/api';
 
 const podiumData = [
     { year: 2004, winner: 'Maximilien', second: 'Fabrice', third: 'Jean-Christophe' },
@@ -28,6 +29,43 @@ const podiumData = [
 ];
 
 const HomePage = () => {
+    const [history, setHistory] = React.useState(null);
+    const [latestRace, setLatestRace] = React.useState(null);
+    const [loading, setLoading] = React.useState(true);
+    const [error, setError] = React.useState(null);
+
+    React.useEffect(() => {
+        let mounted = true;
+        (async () => {
+            try {
+                setLoading(true);
+                setError(null);
+
+                const [h, r] = await Promise.allSettled([getHistory(), getLatestRace()]);
+                const historyValue =
+                    h.status === "fulfilled" ? h.value : { podium: podiumData, mostTitles: [] };
+                const raceValue =
+                    r.status === "fulfilled" ? r.value : null;
+
+                if (!mounted) return;
+                setHistory(historyValue);
+                setLatestRace(raceValue);
+                debugLog("Home loaded", { historyValue, raceValue });
+            } catch (e) {
+                if (!mounted) return;
+                setError(e?.message ?? "Failed to load home data");
+                debugLog("Home load error", e?.message ?? e);
+            } finally {
+                if (mounted) setLoading(false);
+            }
+        })();
+        return () => {
+            mounted = false;
+        };
+    }, []);
+
+    const podium = history?.podium?.length ? history.podium : podiumData;
+
     return (
         <div className="homepage-container">
             <div className="hero-image">
@@ -36,11 +74,28 @@ const HomePage = () => {
 
             <h1>Mega Bike</h1>
             <h3>since 2004...</h3>
-            
+
             <div className="content-container">
-                <div className="links-section">
-                    <Link to="/leaderboard" className="big-button">Leaderboard</Link>
-                    <Link to="/my-team" className="big-button">My Team</Link>
+
+                <div className="history-section">
+                    <h2>Latest race</h2>
+                    {loading && <p>Loading…</p>}
+                    {error && <p style={{ color: "crimson" }}>{error}</p>}
+                    {!loading && !latestRace && <p>No race data yet.</p>}
+                    {!!latestRace && (
+                        <div>
+                            <p><strong>{latestRace.name}</strong> — {latestRace.date}</p>
+                            {Array.isArray(latestRace.results) && latestRace.results.length > 0 && (
+                                <ol>
+                                    {latestRace.results.slice(0, 5).map((row, idx) => (
+                                        <li key={idx}>
+                                            {row.rider} ({row.team}) — {row.points} pts
+                                        </li>
+                                    ))}
+                                </ol>
+                            )}
+                        </div>
+                    )}
                 </div>
 
                 <div className="history-section">
@@ -55,7 +110,7 @@ const HomePage = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {podiumData.map((entry, index) => (
+                            {podium.map((entry, index) => (
                                 <tr key={index}>
                                     <td>{entry.year}</td>
                                     <td>{entry.winner}</td>

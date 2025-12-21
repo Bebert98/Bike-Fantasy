@@ -1,3 +1,13 @@
+## Deprecated
+
+This FastAPI + MongoDB backend is **no longer used**. Megabike now uses:
+
+- **Node/Express API**: `Bike-Fantasy/backend-node/`
+- **Supabase Postgres**: schema/seeds in `Bike-Fantasy/supabase/`
+- **Python ingestion worker**: `Bike-Fantasy/ingest/` (uses `procyclingstats`)
+
+You can keep this folder around for reference, but it should not be wired into deployments.
+
 1.	models/:
 	•	This folder will contain Pydantic models and MongoDB schema-related code.
 	•	Pydantic Models: Pydantic models define the shape of data being passed to/from the API.

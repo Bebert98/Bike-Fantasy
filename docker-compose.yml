@@ -1,15 +1,14 @@
 services:
   
   backend:
-    build: ./backend
-    container_name: fastapi_service
+    build: ./backend-node
+    container_name: node_api_service
     env_file: .env
     ports:
       - "8000:8000"
     volumes:
-      - ./backend:/app
-    depends_on:
-      - mongodb
+      - ./backend-node:/app
+      - /app/node_modules
 
   frontend:
     build: ./frontend
@@ -23,14 +22,4 @@ services:
     depends_on:
       - backend
 
-  mongodb:
-    image: mongo:6.0
-    container_name: mongodb_service
-    env_file: .env
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongodb_data:/data/db
-
-volumes:
-  mongodb_data:
+  # MongoDB/FastAPI is retired in favor of Supabase.
