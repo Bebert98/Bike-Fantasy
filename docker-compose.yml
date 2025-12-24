@@ -1,15 +1,5 @@
 services:
-
-  backend:
-    build: ./backend-node
-    container_name: node_api_service
-    env_file: .env
-    ports:
-      - "8000:8000"
-    volumes:
-      - ./backend-node:/app
-      - /app/node_modules
-
+  # Frontend only (Note: Login function /api won't work in simple docker-compose without Vercel emulation)
   frontend:
     build: ./frontend
     container_name: react_service
@@ -19,6 +9,13 @@ services:
     volumes:
       - ./frontend:/app
       - /app/node_modules
-    depends_on:
-      - backend
-  # MongoDB/FastAPI is retired in favor of Supabase.
+
+  # Ingestion worker (Use this to run scripts)
+  ingestion:
+    build: ./ingest
+    container_name: ingestion_worker
+    env_file: .env
+    volumes:
+      - ./ingest:/app/ingest
+      - ./references:/app/references
+    command: tail -f /dev/null # Keep alive to run commands via docker exec

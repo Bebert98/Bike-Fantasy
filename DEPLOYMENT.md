@@ -1,53 +1,50 @@
-# Deployment Guide
+# Deployment Guide (Vercel)
 
-This app is split into two parts that need to be deployed separately:
-1.  **Backend API** (Node.js/Express) -> Deploy to **Render**
-2.  **Frontend** (React/Vite) -> Deploy to **Vercel**
+The app is optimized for deployment on [Vercel](https://vercel.com), which handles both the Frontend (React) and the Serverless Back-end (API functions).
 
----
+## Prerequisites
 
-## Part 1: Deploy Backend (Render)
+1.  **Vercel Account**: Sign up at vercel.com.
+2.  **Supabase Project**: You already have this.
+3.  **GitHub Repository**: Push this code to a GitHub repository.
 
-We deploy the backend first because the frontend needs the backend's URL.
+## Step-by-Step Deployment
 
-1.  **Create Account**: Go to [render.com](https://render.com) and sign up/login.
-2.  **New Web Service**: Click **New +** -> **Web Service**.
-3.  **Connect Repo**: Connect your GitHub repository.
-4.  **Configure Service**:
-    *   **Root Directory**: `backend-node` (Important!)
-    *   **Runtime**: Node
-    *   **Build Command**: `npm install`
-    *   **Start Command**: `node src/server.js`
-5.  **Environment Variables**:
-    *   Scroll down to **Advanced** -> **Environment Variables**. Add these keys from your local `.env`:
-        *   `SUPABASE_URL`: (Your Supabase URL)
-        *   `SUPABASE_SERVICE_ROLE_KEY`: (Your Supabase Service Role Key)
-        *   `MEGABIKE_JWT_SECRET`: (A random secret string)
-    *   *Note: Render automatically creates a `PORT` variable, so you don't need to add it.*
-6.  **Deploy**: Click **Create Web Service**.
-7.  **Get URL**: Once deployed, copy the **onrender.com URL** (e.g., `https://megabike-api.onrender.com`). You will need this for the frontend.
+1.  **Import to Vercel**
+    *   Go to Vercel Dashboard -> **Add New...** -> **Project**.
+    *   Select your GitHub repository.
 
----
-
-## Part 2: Deploy Frontend (Vercel)
-
-1.  **Create Account**: Go to [vercel.com](https://vercel.com) and sign up/login.
-2.  **Add New Project**: Click **Add New...** -> **Project**.
-3.  **Import Repo**: Import your `Bike-Fantasy` repository.
-4.  **Configure Project**:
+2.  **Project Configuration**
     *   **Framework Preset**: Vite (should detect automatically).
-    *   **Root Directory**: Click **Edit** and select `frontend`.
-5.  **Environment Variables**:
-    *   Add the following variable:
-        *   `REACT_APP_API_URL`: Paste your **Backend URL** from Part 1 (e.g., `https://megabike-api.onrender.com`).
-6.  **Deploy**: Click **Deploy**.
+    *   **Root Directory**: `./` (Root of the repo).
+    *   **Build Command**: `cd frontend && npm install && npm run build` 
+        *   *Note: Since `frontend` is in a subdirectory, Vercel might auto-detect it if you set the Root Directory to `frontend`. However, our API functions are in `/api` (root). Use Root Directory = `.`.*
+        *   **Better Setting**:
+            *   **Root Directory**: `.`
+            *   **Build Command**: `cd frontend && npm install && npm run build`
+            *   **Output Directory**: `frontend/dist`
 
----
+3.  **Environment Variables**
+    Add the following variables in the Vercel Project Settings:
 
-## Part 3: Database & Ingestion
+    | Variable | Value | Description |
+    | :--- | :--- | :--- |
+    | `REACT_APP_SUPABASE_URL` | `https://your-project.supabase.co` | From Supabase |
+    | `REACT_APP_SUPABASE_ANON_KEY` | `eyJ...` | From Supabase |
+    | `SUPABASE_URL` | `https://your-project.supabase.co` | *Same as above (for API)* |
+    | `SUPABASE_SERVICE_ROLE_KEY` | `eyJ...` | **Secret key** (for API) |
+    | `SUPABASE_JWT_SECRET` | `super-secret-jwt` | Found in Supabase -> Settings -> API |
 
-*   **Database**: Your Supabase database is already in the cloud, so no action is needed there.
-*   **Ingestion (Updates)**:
-    *   Currently, the ingestion script (`ingest/daily_sync.py`) runs locally on your machine.
-    *   **To run in cloud**: You can set up a **Cron Job** on Render pointing to the `ingest` folder, but that requires setting up Python.
-    *   **Simplest for now**: Continue running the sync script locally from your terminal (`python -m ingest.daily_sync ...`) whenever you want to update race results.
+4.  **Deploy**
+    *   Click **Deploy**.
+    *   Vercel will build the frontend and deploy the `/api` functions.
+
+## Local Development (Serverless)
+
+To run the app locally with Serverless Functions, use the Vercel CLI:
+
+1.  Install Vercel CLI: `npm i -g vercel`
+2.  Link Project: `vercel link`
+3.  Run Dev: `vercel dev`
+
+This will start a local server (usually port 3000) that handles both the frontend and the `/api/verify-code` function.
