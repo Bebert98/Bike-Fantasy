@@ -1,5 +1,5 @@
 services:
-  
+
   backend:
     build: ./backend-node
     container_name: node_api_service
@@ -21,5 +21,4 @@ services:
       - /app/node_modules
     depends_on:
       - backend
-
   # MongoDB/FastAPI is retired in favor of Supabase.

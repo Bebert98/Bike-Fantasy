@@ -44,12 +44,15 @@ router.get("/me/team", authMiddleware, async (req, res) => {
     return { rider_name: r.rider_name, price, points, slot: row.slot };
   });
 
+  const computedTeamPoints = riders.reduce((sum, r) => sum + (r.points ?? 0), 0);
+
   return res.json({
     teamName: team.team_name,
     season: team.season_year,
     riders,
     totalPrice: team.total_cost,
-    points: team.points,
+    // Prefer computed points so the UI is correct even if the nightly sync hasn't updated the team row yet.
+    points: computedTeamPoints,
     createdAt: team.created_at,
   });
 });
@@ -136,12 +139,25 @@ router.post("/me/team", authMiddleware, async (req, res) => {
   const { error: insertRosterErr } = await supabase.from("team_riders").insert(teamRidersRows);
   if (insertRosterErr) return res.status(500).json({ error: "DB error" });
 
+  // Compute initial team points from existing rider_points (so teams don't show 0 until the next daily sync).
+  const riderIds = rosterWithCosts.map((r) => r.rider_id);
+  const { data: ptsRows, error: ptsErr } = await supabase
+    .from("rider_points")
+    .select("rider_id, points")
+    .eq("season_year", seasonYear)
+    .in("rider_id", riderIds);
+  if (ptsErr) return res.status(500).json({ error: "DB error" });
+  const totalPoints = (ptsRows ?? []).reduce((sum, r) => sum + (r.points ?? 0), 0);
+
+  // Persist points so leaderboard is correct immediately.
+  await supabase.from("teams").update({ points: totalPoints }).eq("id", createdTeam.id);
+
   return res.status(201).json({
     teamName: createdTeam.team_name,
     season: createdTeam.season_year,
     riders: rosterWithCosts.map((r) => ({ rider_name: r.rider_name, price: r.price })),
     totalPrice: createdTeam.total_cost,
-    points: createdTeam.points,
+    points: totalPoints,
     createdAt: createdTeam.created_at,
   });
 });

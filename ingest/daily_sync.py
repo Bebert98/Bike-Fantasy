@@ -117,6 +117,24 @@ async def main() -> None:
         except Exception:
             pass
 
+        # Parse details (date)
+        from .pcs_parse import parse_race_details
+        details = parse_race_details(html)
+        if details.get("startdate"):
+            race_date = details["startdate"]
+        else:
+            # Fallback: if results page didn't have date, try overview page
+            # Result slug: race/foo/2025/result -> Overview: race/foo/2025
+            if "/result" in result_slug:
+                overview_slug = result_slug.replace("/result", "")
+                log(f"[pcs] date missing, try overview: {overview_slug}")
+                st_ov, html_ov = await _fetch_html(overview_slug)
+                if st_ov == 200:
+                    details_ov = parse_race_details(html_ov)
+                    if details_ov.get("startdate"):
+                        race_date = details_ov["startdate"]
+                        log(f"[pcs] found date in overview: {race_date}")
+
         results = parse_race_result_table(html)
         log(f"[pcs] parsed results rows: {len(results)}")
 
@@ -208,15 +226,37 @@ async def main() -> None:
     # Idempotent recompute of rider_points for the season (sum all race_results in the season year)
     start = f"{args.season_year}-01-01"
     end = f"{args.season_year}-12-31"
-    rr = (
-        sb.table("race_results")
-        .select("rider_id, points_awarded, races!inner(race_date)")
-        .gte("races.race_date", start)
-        .lte("races.race_date", end)
+    # NOTE: Filtering on embedded resources (races.race_date) is not reliable across
+    # PostgREST client versions. Instead: fetch race ids for the season, then filter
+    # race_results by race_id.
+    races_in_season = (
+        sb.table("races")
+        .select("id")
+        .gte("race_date", start)
+        .lte("race_date", end)
         .execute()
         .data
         or []
     )
+    race_ids = [r["id"] for r in races_in_season if r.get("id")]
+    rr: list[dict[str, Any]] = []
+    if race_ids:
+        start_idx = 0
+        limit = 1000
+        while True:
+            batch = (
+                sb.table("race_results")
+                .select("rider_id, points_awarded")
+                .in_("race_id", race_ids)
+                .range(start_idx, start_idx + limit - 1)
+                .execute()
+                .data
+                or []
+            )
+            rr.extend(batch)
+            if len(batch) < limit:
+                break
+            start_idx += limit
     totals: dict[str, int] = {}
     for row in rr:
         rid = row.get("rider_id")

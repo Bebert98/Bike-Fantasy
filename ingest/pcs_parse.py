@@ -239,3 +239,28 @@ def parse_races_php_one_day_2025(html: str) -> dict[str, dict[str, Any]]:
     return out
 
 
+def parse_race_details(html: str) -> dict[str, Any]:
+    """
+    Parse PCS race details page (results page often has this info in header).
+    Extracts 'startdate'.
+    """
+    tree = HTMLParser(html)
+    out = {}
+    
+    # Try to find date in the info list
+    # Snippet: <ul class="list keyvalueList fs14"> <li class=""><div class="title ">Startdate: </div><div class=" value" >2025-04-27</div></li> ...
+    
+    # Try multiple common selectors for robustness
+    for selector in ["ul.infolist", "ul.keyvalueList", "ul.list"]:
+        infolist = tree.css_first(selector)
+        if infolist:
+            for li in infolist.css("li"):
+                title_div = li.css_first(".title")
+                if title_div and "Startdate" in title_div.text():
+                    val_div = li.css_first(".value")
+                    if val_div:
+                        out["startdate"] = _clean_text(val_div.text())
+                        return out
+    return out
+
+

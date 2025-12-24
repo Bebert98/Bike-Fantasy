@@ -43,6 +43,17 @@ export default function Navbar() {
                         My Team
                     </NavLink>
                     <NavLink
+                        to="/history"
+                        className={({ isActive }) =>
+                            `${navLinkBase} ${isActive
+                                ? "bg-slate-900 text-white"
+                                : "text-slate-700 hover:bg-slate-100"
+                            }`
+                        }
+                    >
+                        History
+                    </NavLink>
+                    <NavLink
                         to="/leaderboard"
                         className={({ isActive }) =>
                             `${navLinkBase} ${isActive
@@ -52,6 +63,17 @@ export default function Navbar() {
                         }
                     >
                         Leaderboard
+                    </NavLink>
+                    <NavLink
+                        to="/profile"
+                        className={({ isActive }) =>
+                            `${navLinkBase} ${isActive
+                                ? "bg-slate-900 text-white"
+                                : "text-slate-700 hover:bg-slate-100"
+                            }`
+                        }
+                    >
+                        Profile
                     </NavLink>
                 </nav>
             </div>

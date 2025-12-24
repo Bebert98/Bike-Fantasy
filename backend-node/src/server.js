@@ -7,6 +7,7 @@ import { env } from "./env.js";
 import authRoutes from "./routes/auth.js";
 import usersRoutes from "./routes/users.js";
 import teamsRoutes from "./routes/teams.js";
+import publicTeamsRoutes from "./routes/publicTeams.js";
 import ridersRoutes from "./routes/riders.js";
 import leaderboardRoutes from "./routes/leaderboard.js";
 import historyRoutes from "./routes/history.js";
@@ -24,6 +25,7 @@ app.get("/api/health", (_req, res) => res.json({ ok: true }));
 app.use("/api/auth", authRoutes);
 app.use("/api/users", usersRoutes);
 app.use("/api/users", teamsRoutes); // /me/team under /api/users
+app.use("/api/teams", publicTeamsRoutes);
 app.use("/api/riders", ridersRoutes);
 app.use("/api/leaderboard", leaderboardRoutes);
 app.use("/api/history", historyRoutes);

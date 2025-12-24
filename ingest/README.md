@@ -17,6 +17,10 @@ Optional (only if PCS blocks scraping with a challenge page):
 - CSV fallback: `python -m ingest.yearly_refresh --season-year 2026 --seed-csv ingest/seed/riders_seed_example.csv`
 - `python -m ingest.daily_sync --season-year 2026 --sync-all` (sync all Megabike races, recompute points, update leaderboard)
 - Debug the scraper output shape: `python -m ingest.debug_dump --rider-slug rider/tadej-pogacar --race-slug race/milano-sanremo`
+- Import 2025 teams from cleaned mapping CSV (creates users/access codes + teams + rosters):
+  - Dry run: `python -m ingest.import_teams_cleaned_2025 --season-year 2025 --csv references/teams_cleaned_mapped.csv --dry-run`
+  - Real: `python -m ingest.import_teams_cleaned_2025 --season-year 2025 --csv references/teams_cleaned_mapped.csv --seed-missing-riders --rank-date 2025-12-21`
+  - Recompute/update existing imported teams: add `--overwrite`
 
 ### Notes
 

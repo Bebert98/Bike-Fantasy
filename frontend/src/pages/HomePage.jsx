@@ -1,36 +1,12 @@
-import React from 'react';
-import '../styles/HomePage.css';
-import philippeGilbertImage from '../assets/philippe_gilbert.png';
-import { debugLog } from '../services/debug';
-import { getHistory, getLatestRace } from '../services/api';
-
-const podiumData = [
-    { year: 2004, winner: 'Maximilien', second: 'Fabrice', third: 'Jean-Christophe' },
-    { year: 2005, winner: 'Patrice', second: 'Fabrice', third: 'Dominique' },
-    { year: 2006, winner: 'Maximilien', second: 'Dominique', third: 'Fabrice' },
-    { year: 2007, winner: 'Jean-Christophe', second: 'Damien', third: 'Harold' },
-    { year: 2008, winner: 'Maximilien', second: 'Jean-Christophe', third: 'Pierre-Jean' },
-    { year: 2009, winner: 'Harold', second: 'Damien', third: 'Dominique' },
-    { year: 2010, winner: 'Maximilien', second: 'Damien', third: 'Dominique' },
-    { year: 2011, winner: 'Maximilien', second: 'Patrice', third: 'Harold' },
-    { year: 2012, winner: 'Damien', second: 'Harold', third: 'Dominique' },
-    { year: 2013, winner: 'Harold', second: 'Dominique', third: 'Jean-Christophe' },
-    { year: 2014, winner: 'Damien', second: 'Patrice', third: 'Maximilien' },
-    { year: 2015, winner: 'Harold', second: 'Maximilien', third: 'Antoine' },
-    { year: 2016, winner: 'Damien', second: 'Antoine', third: 'Dominique' },
-    { year: 2017, winner: 'Damien', second: 'Harold', third: 'Antoine' },
-    { year: 2018, winner: 'Antoine', second: 'Pierre-Gilles', third: 'Jean-Christophe' },
-    { year: 2019, winner: 'Antoine', second: 'Harold', third: 'Jean-Christophe' },
-    { year: 2020, winner: 'Bernard', second: 'Jean-Christophe', third: 'Brice' },
-    { year: 2021, winner: 'Olivier (Jo)', second: 'Antoine', third: 'Albert' },
-    { year: 2022, winner: 'Felix', second: 'Jack', third: 'Albert' },
-    { year: 2023, winner: 'Adrien', second: 'Jack', third: 'Dominique' },
-    { year: 2024, winner: 'Albert', second: 'Jack', third: 'Dominique' }
-];
+import React from "react";
+import "../styles/HomePage.css";
+import philippeGilbertImage from "../assets/philippe_gilbert.png";
+import { debugLog } from "../services/debug";
+import { getLatestRace, getNextRace } from "../services/api";
 
 const HomePage = () => {
-    const [history, setHistory] = React.useState(null);
     const [latestRace, setLatestRace] = React.useState(null);
+    const [nextRace, setNextRace] = React.useState(null);
     const [loading, setLoading] = React.useState(true);
     const [error, setError] = React.useState(null);
 
@@ -41,16 +17,15 @@ const HomePage = () => {
                 setLoading(true);
                 setError(null);
 
-                const [h, r] = await Promise.allSettled([getHistory(), getLatestRace()]);
-                const historyValue =
-                    h.status === "fulfilled" ? h.value : { podium: podiumData, mostTitles: [] };
-                const raceValue =
-                    r.status === "fulfilled" ? r.value : null;
-
                 if (!mounted) return;
-                setHistory(historyValue);
-                setLatestRace(raceValue);
-                debugLog("Home loaded", { historyValue, raceValue });
+                if (!mounted) return;
+                const [latest, next] = await Promise.all([
+                    getLatestRace(),
+                    getNextRace(),
+                ]);
+                setLatestRace(latest);
+                setNextRace(next);
+                debugLog("Home loaded", { latest, next });
             } catch (e) {
                 if (!mounted) return;
                 setError(e?.message ?? "Failed to load home data");
@@ -64,8 +39,6 @@ const HomePage = () => {
         };
     }, []);
 
-    const podium = history?.podium?.length ? history.podium : podiumData;
-
     return (
         <div className="homepage-container">
             <div className="hero-image">
@@ -77,49 +50,54 @@ const HomePage = () => {
 
             <div className="content-container">
 
-                <div className="history-section">
-                    <h2>Latest race</h2>
-                    {loading && <p>Loading…</p>}
-                    {error && <p style={{ color: "crimson" }}>{error}</p>}
-                    {!loading && !latestRace && <p>No race data yet.</p>}
-                    {!!latestRace && (
-                        <div>
-                            <p><strong>{latestRace.name}</strong> — {latestRace.date}</p>
-                            {Array.isArray(latestRace.results) && latestRace.results.length > 0 && (
-                                <ol>
-                                    {latestRace.results.slice(0, 5).map((row, idx) => (
-                                        <li key={idx}>
-                                            {row.rider} ({row.team}) — {row.points} pts
-                                        </li>
-                                    ))}
-                                </ol>
-                            )}
-                        </div>
-                    )}
-                </div>
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                    {/* Latest Race */}
+                    <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+                        <h2 className="mb-4 text-lg font-bold text-slate-800">Latest Race</h2>
+                        {loading && <p className="text-slate-500">Loading…</p>}
+                        {error && <p className="text-red-600">{error}</p>}
+                        {!loading && !latestRace && (
+                            <p className="text-slate-500">No race results available yet.</p>
+                        )}
+                        {!!latestRace && (
+                            <div>
+                                <div className="mb-4">
+                                    <div className="font-semibold text-slate-900">{latestRace.name}</div>
+                                    <div className="text-sm text-slate-500">{latestRace.date}</div>
+                                </div>
+                                {Array.isArray(latestRace.results) && latestRace.results.length > 0 ? (
+                                    <ol className="space-y-2 text-sm">
+                                        {latestRace.results.slice(0, 5).map((row, idx) => (
+                                            <li key={idx} className="flex justify-between border-b pb-1 last:border-0 hover:bg-slate-50">
+                                                <span>{idx + 1}. {row.rider} <span className="text-xs text-slate-400">({row.team})</span></span>
+                                                <span className="font-medium">{row.points}</span>
+                                            </li>
+                                        ))}
+                                    </ol>
+                                ) : (
+                                    <p className="text-sm text-slate-500">No results yet.</p>
+                                )}
+                            </div>
+                        )}
+                    </div>
 
-                <div className="history-section">
-                    <h2>Podium History</h2>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Year</th>
-                                <th>Winner</th>
-                                <th>2nd</th>
-                                <th>3rd</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {podium.map((entry, index) => (
-                                <tr key={index}>
-                                    <td>{entry.year}</td>
-                                    <td>{entry.winner}</td>
-                                    <td>{entry.second}</td>
-                                    <td>{entry.third}</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                    {/* Next Race */}
+                    <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+                        <h2 className="mb-4 text-lg font-bold text-slate-800">Next Race</h2>
+                        {loading && <p className="text-slate-500">Loading…</p>}
+                        {!loading && !nextRace && (
+                            <p className="text-slate-500">No upcoming races found.</p>
+                        )}
+                        {!!nextRace && (
+                            <div>
+                                <div className="text-xl font-bold text-blue-600">{nextRace.name}</div>
+                                <div className="mt-2 text-slate-600">{nextRace.date}</div>
+                                <div className="mt-4 rounded-md bg-blue-50 p-4 text-sm text-blue-800">
+                                    Get your team ready!
+                                </div>
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
         </div>

@@ -9,9 +9,7 @@ export default function Footer() {
           © {year} Megabike Fantasy · Season {year}
         </div>
         <div className="flex gap-4">
-          <span className="text-slate-400">Powered by ProCyclingStats data</span>
-          <span className="text-slate-300">|</span>
-          <span className="text-slate-400">Budget: 11,000</span>
+          <span className="text-slate-400"> Website by <a className="underline" href="https://www.instagram.com/charles.vanz/">Charles van Zeebroeck</a></span>
         </div>
       </div>
     </footer>

@@ -14,8 +14,11 @@ def points_for_rank(rank: int, race_tier: int, rank_points: dict[int, list[int]]
     if not table:
         return 0
     idx = rank - 1
-    if idx < 0 or idx >= len(table):
+    if idx < 0:
         return 0
+    # If rank is beyond the table, give the last value (participation points).
+    if idx >= len(table):
+        return int(table[-1])
     return int(table[idx])
 
 

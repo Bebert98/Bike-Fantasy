@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import { getCurrentLeaderboard } from "../services/api";
 import { debugLog } from "../services/debug";
 
@@ -56,11 +57,31 @@ export default function LeaderboardPage() {
                             <tbody>
                                 {rows.map((t, idx) => (
                                     <tr
-                                        key={`${t.team_name ?? t.teamName ?? "team"}-${idx}`}
+                                        key={`${t.id ?? t.team_name ?? t.teamName ?? "team"}-${idx}`}
                                         className="border-b border-slate-100"
                                     >
                                         <td className="py-2 pr-4">{idx + 1}</td>
-                                        <td className="py-2 pr-4">{t.team_name ?? t.teamName}</td>
+                                        <td className="py-2 pr-4">
+                                            <div>
+                                                {t.id ? (
+                                                    <Link
+                                                        className="block text-blue-700 hover:underline"
+                                                        to={`/team/${t.id}`}
+                                                    >
+                                                        {t.team_name ?? t.teamName}
+                                                    </Link>
+                                                ) : (
+                                                    <div className="block">
+                                                        {t.team_name ?? t.teamName}
+                                                    </div>
+                                                )}
+                                                {t.ownerName ? (
+                                                    <div className="text-xs text-slate-500">
+                                                        {t.ownerName}
+                                                    </div>
+                                                ) : null}
+                                            </div>
+                                        </td>
                                         <td className="py-2 pr-4 text-right">{t.points ?? 0}</td>
                                     </tr>
                                 ))}

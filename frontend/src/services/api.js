@@ -158,6 +158,26 @@ export async function getLatestRace() {
   }
 }
 
+export async function getNextRace() {
+  if (OFFLINE_MODE) {
+    return {
+      name: "Next race (mock)",
+      date: new Date(Date.now() + 86400000).toISOString().slice(0, 10),
+    };
+  }
+  try {
+    return await get("/api/races/next");
+  } catch (err) {
+    if (isAxiosNetworkError(err)) {
+      return {
+        name: "Next race (mock)",
+        date: new Date(Date.now() + 86400000).toISOString().slice(0, 10),
+      };
+    }
+    throw err;
+  }
+}
+
 export async function getMe() {
   if (OFFLINE_MODE) {
     const user = readJson(MOCK_USER_KEY, null);
@@ -171,6 +191,29 @@ export async function getMe() {
       const user = readJson(MOCK_USER_KEY, null);
       if (user) return user;
       return { id: "mock_user", displayName: "Megabike User", profileImageUrl: null };
+    }
+    throw err;
+  }
+}
+
+export async function updateMe(payload) {
+  if (OFFLINE_MODE) {
+    const user = readJson(MOCK_USER_KEY, {}) || {};
+    if (payload.displayName) user.displayName = payload.displayName;
+    if (payload.profileImageUrl !== undefined) user.profileImageUrl = payload.profileImageUrl;
+    writeJson(MOCK_USER_KEY, user);
+    return user;
+  }
+  try {
+    return await api.patch("/api/users/me", payload);
+  } catch (err) {
+    if (isAxiosNetworkError(err)) {
+      // Emulate offline
+      const user = readJson(MOCK_USER_KEY, {}) || {};
+      if (payload.displayName) user.displayName = payload.displayName;
+      if (payload.profileImageUrl !== undefined) user.profileImageUrl = payload.profileImageUrl;
+      writeJson(MOCK_USER_KEY, user);
+      return user;
     }
     throw err;
   }
@@ -239,7 +282,7 @@ export async function getCurrentLeaderboard() {
   if (OFFLINE_MODE) {
     const team = readJson(MOCK_TEAM_KEY, null);
     const teams = team
-      ? [{ teamName: team.teamName, points: team.points ?? 0 }]
+      ? [{ id: "mock_team", teamName: team.teamName, points: team.points ?? 0 }]
       : [];
     return { teams };
   }
@@ -249,10 +292,21 @@ export async function getCurrentLeaderboard() {
     if (isAxiosNetworkError(err)) {
       const team = readJson(MOCK_TEAM_KEY, null);
       const teams = team
-        ? [{ teamName: team.teamName, points: team.points ?? 0 }]
+        ? [{ id: "mock_team", teamName: team.teamName, points: team.points ?? 0 }]
         : [];
       return { teams };
     }
     throw err;
   }
+}
+
+export async function getTeamById(teamId, { season } = {}) {
+  if (!teamId) throw new Error("Missing teamId");
+  if (OFFLINE_MODE) {
+    const team = readJson(MOCK_TEAM_KEY, null);
+    if (!team) return null;
+    return { ...team, id: teamId };
+  }
+  const params = season ? { season } : undefined;
+  return await get(`/api/teams/${encodeURIComponent(teamId)}`, { params });
 }
